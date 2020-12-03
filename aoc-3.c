@@ -31,11 +31,8 @@ map_free(struct map_t * map)
 }
 
 
-void readmap(char * filepath);
-int count_trees_encountered(int slope_x, int slope_y);
-
 void
-readmap(char * filepath)
+map_read_from_file(struct map_t * map, char * filepath)
 {
   FILE * fp = fopen(filepath, "r");
 
@@ -46,7 +43,6 @@ readmap(char * filepath)
   ssize_t len = getline(&line, &bufsize, fp);
   size_t width = strlen(line) - 1;
   size_t height = 1;
-  printf("w: %d\n", width);
   for (;;) {
 		len = getline(&line, &bufsize, fp);
 		if (len == -1) {
@@ -54,10 +50,9 @@ readmap(char * filepath)
 		}
 		height += 1;
   }
-  printf("h: %d\n", height);
   rewind(fp);
-	struct map_t map;
-	map_init(&map, width, height);
+
+	map_init(map, width, height);
 
 	line = NULL;
 	int row = 0;
@@ -68,9 +63,9 @@ readmap(char * filepath)
 		}
 		for (int i = 0; i < width; i++) {
   		if (line[i] == '.') {
-    		map.data[row][i] = 0;
+    		map->data[row][i] = 0;
   		} else if (line[i] == '#') {
-    		map.data[row][i] = 1;
+    		map->data[row][i] = 1;
   		} else {
     		fprintf(stderr, "Invalid symbol `%c`.\n", line[i]);
     		exit(EXIT_FAILURE);
@@ -79,16 +74,71 @@ readmap(char * filepath)
 		row++;
 	}
 
-	for (int i = 0; i < height; i++) {
-  	for (int j = 0; j < width; j++) {
-    	printf("%d", map.data[i][j]);
+  fclose(fp);
+}
+
+
+void
+map_print(struct map_t * map)
+{
+	for (int i = 0; i < map->height; i++) {
+  	for (int j = 0; j < map->width; j++) {
+    	printf("%d", map->data[i][j]);
   	}
   	printf("\n");
 	}
-
-	map_free(&map);
-  fclose(fp);
 }
+
+int
+map_getfield(struct map_t * map, int vpos, int hpos)
+{
+	if (vpos < 0 || vpos >= map->height || hpos < 0) {
+  	fprintf(stderr, "Error: invalid position (%d, %d).\n", vpos, hpos);
+  	exit(EXIT_FAILURE);
+	}
+	hpos = hpos % map->width;
+	return map->data[vpos][hpos];
+}
+
+int
+count_trees_encountered(struct map_t * map, int vslope, int hslope)
+{
+  if (vslope != 1 && hslope != 1) {
+    fprintf(stderr, "Error: one of the slope parameters has to be 1.\n");
+    exit(EXIT_FAILURE);
+  } else if (vslope < 1 || hslope < 1) {
+    fprintf(stderr, "Error: slope parameters must be >= 1.\n");
+    exit(EXIT_FAILURE);
+  }
+	int vpos = 0;
+	int hpos = 0;
+	int cnt = 0;
+	for (;;) {
+		vpos += vslope;
+		hpos += hslope;
+		if (vpos >= map->height) {
+  		break;
+		} else if (map_getfield(map, vpos, hpos) == 1) {
+  		cnt++;
+		}
+	}
+	return cnt;
+}
+
+
+long
+prod_of_trees_encountered
+(struct map_t * map, int * vslopes, int * hslopes, int num_slopes)
+{
+	long prod = 1;
+	int cnt;
+	for (int i = 0; i < num_slopes; i++) {
+		cnt = count_trees_encountered(map, vslopes[i], hslopes[i]);
+		prod *= (long)cnt;
+	}
+	return prod;
+}
+
 
 int
 main(int argc, char * argv[])
@@ -98,6 +148,13 @@ main(int argc, char * argv[])
     return EXIT_FAILURE;
   }
   char * filepath = argv[1];
-  readmap(filepath);
+  map_read_from_file(&map, filepath);
+  int cnt = count_trees_encountered(&map, 1, 3);
+  printf("pt1: %d\n", cnt);
+  int vslopes[] = {1, 1, 1, 1, 2};
+  int hslopes[] = {1, 3, 5, 7, 1};
+	long prod = prod_of_trees_encountered(&map, vslopes, hslopes, 5);
+	printf("pt2: %ld\n", prod);
+  map_free(&map);
 	return EXIT_SUCCESS;
 }
