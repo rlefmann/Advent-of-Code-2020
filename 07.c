@@ -314,7 +314,7 @@ count_bags_that_can_contain_bag_of_color(struct list_t * rulelst, char * color)
 		}
 	}
 	size_t num_colors = colorlst.len;
-	// TODO: free colorlst
+	list_free(&colorlst);
 	return num_colors - 1;
 }
 
