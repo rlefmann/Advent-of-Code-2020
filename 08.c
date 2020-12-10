@@ -15,27 +15,27 @@ struct instr_t {
 bool
 is_valid_instruction_string(char * inst)
 {
-  if (strcmp(inst, "acc") == 0) {
-    return true;
-  } else if (strcmp(inst, "jmp") == 0) {
-    return true;
-  } else if (strcmp(inst, "nop") == 0) {
-    return true;
-  }
-  return false;
+	if (strcmp(inst, "acc") == 0) {
+		return true;
+	} else if (strcmp(inst, "jmp") == 0) {
+		return true;
+	} else if (strcmp(inst, "nop") == 0) {
+		return true;
+	}
+	return false;
 }
 
 
 void
 instr_init(struct instr_t * ins, char * instruction, int value)
 {
-  if (!is_valid_instruction_string(instruction)) {
-    fprintf(stderr, "Not a valid instruction: `%s`.\n", instruction);
-    exit(EXIT_FAILURE);
-  }
-  strncpy(ins->instruction, instruction, 4);
-  ins->value = value;
-  ins->executed = false;
+	if (!is_valid_instruction_string(instruction)) {
+		fprintf(stderr, "Not a valid instruction: `%s`.\n", instruction);
+		exit(EXIT_FAILURE);
+	}
+	strncpy(ins->instruction, instruction, 4);
+	ins->value = value;
+	ins->executed = false;
 }
 
 
@@ -56,9 +56,9 @@ struct list_t {
 void
 list_init(struct list_t * lst)
 {
-  lst->items = malloc(LIST_BUFSIZE * sizeof(void *));
-  lst->len = 0;
-  lst->cap = LIST_BUFSIZE;
+	lst->items = malloc(LIST_BUFSIZE * sizeof(void *));
+	lst->len = 0;
+	lst->cap = LIST_BUFSIZE;
 }
 
 
@@ -76,7 +76,7 @@ void
 list_free_list_and_items(struct list_t * lst)
 {
 	for (int i = 0; i < lst->len; i++) {
-  	free(lst->items[i]);
+		free(lst->items[i]);
 	}
 	list_free(lst);
 }
@@ -86,11 +86,11 @@ void
 list_add(struct list_t * lst, void * item)
 {
 	if (lst->len == lst->cap) {
-  	size_t cap_new = lst->cap + LIST_BUFSIZE;
+		size_t cap_new = lst->cap + LIST_BUFSIZE;
 		lst->items = realloc(lst->items, cap_new * sizeof(void *));
 		if (lst->items == NULL) {
-  		fprintf(stderr, "Failed to allocate %d items.\n", cap_new);
-  		exit(EXIT_FAILURE);
+			fprintf(stderr, "Failed to allocate %d items.\n", cap_new);
+			exit(EXIT_FAILURE);
 		}
 		lst->cap = cap_new;
 	}
@@ -102,18 +102,18 @@ list_add(struct list_t * lst, void * item)
 void
 exec_instruction(struct instr_t * ins, int * acc, int * idx)
 {
-  if (strcmp(ins->instruction, "acc") == 0) {
-  	(*acc) += ins->value;
-  	(*idx)++;
-  } else if (strcmp(ins->instruction, "jmp") == 0) {
-  	(*idx) += ins->value;
-  } else if (strcmp(ins->instruction, "nop") == 0) {
-  	(*idx)++;
-  } else {
-  	fprintf(stderr, "Invalid instruction: `%s`.\n", ins->instruction);
-  	exit(EXIT_FAILURE);
-  }
-  ins->executed = true;
+	if (strcmp(ins->instruction, "acc") == 0) {
+		(*acc) += ins->value;
+		(*idx)++;
+	} else if (strcmp(ins->instruction, "jmp") == 0) {
+		(*idx) += ins->value;
+	} else if (strcmp(ins->instruction, "nop") == 0) {
+		(*idx)++;
+	} else {
+		fprintf(stderr, "Invalid instruction: `%s`.\n", ins->instruction);
+		exit(EXIT_FAILURE);
+	}
+	ins->executed = true;
 }
 
 
@@ -124,16 +124,16 @@ exec_program_pt1(struct list_t * instlist, int * acc)
 	int instidx = 0;
 	struct instr_t * curinst;
 	for (;;) {
-  	if (instidx < 0 || instidx > instlist->len) {
-    	return false;
-  	} else if (instidx == instlist->len) {
-    	printf("program executed successfully!\n");
-    	return true;
-  	}
+		if (instidx < 0 || instidx > instlist->len) {
+			return false;
+		} else if (instidx == instlist->len) {
+			printf("program executed successfully!\n");
+			return true;
+		}
 		curinst = instlist->items[instidx];
-	  if (curinst->executed == true) {
-  	  return false;
-	  }
+		if (curinst->executed == true) {
+			return false;
+		}
 		exec_instruction(curinst, acc, &instidx);
 	}
 	// never reached:
@@ -144,7 +144,7 @@ exec_program_pt1(struct list_t * instlist, int * acc)
 void
 unmark_executed(struct list_t * instlist)
 {
-  struct instr_t * ins;
+	struct instr_t * ins;
 	for (int i = 0; i < instlist->len; i++) {
 		ins = instlist->items[i];
 		ins->executed = false;
@@ -155,25 +155,25 @@ unmark_executed(struct list_t * instlist)
 bool
 change_instruction(struct instr_t * ins)
 {
-  if (strcmp(ins->instruction, "jmp") == 0) {
-	  strncpy(ins->instruction, "nop", 4);
-	  return true;
-  } else if (strcmp(ins->instruction, "nop") == 0) {
-	  strncpy(ins->instruction, "jmp", 4);
-	  return true;
-  }
-  return false;
+	if (strcmp(ins->instruction, "jmp") == 0) {
+		strncpy(ins->instruction, "nop", 4);
+		return true;
+	} else if (strcmp(ins->instruction, "nop") == 0) {
+		strncpy(ins->instruction, "jmp", 4);
+		return true;
+	}
+	return false;
 }
 
 
 bool
 exec_program_pt2(struct list_t * instlist, int * acc, int changedpos)
 {
-  struct instr_t * changeinstr = instlist->items[changedpos];
-  bool has_changed = change_instruction(changeinstr);
-  if (!has_changed) {
-    return false;
-  }
+	struct instr_t * changeinstr = instlist->items[changedpos];
+	bool has_changed = change_instruction(changeinstr);
+	if (!has_changed) {
+		return false;
+	}
 
 	bool success = exec_program_pt1(instlist, acc);
 	change_instruction(changeinstr);
@@ -187,11 +187,11 @@ fix_program(struct list_t * instlist)
 	int acc;
 	bool success;
 	for (int i = 0; i < instlist->len; i++) {
-  	acc = 0;
+		acc = 0;
 		success = exec_program_pt2(instlist, &acc, i);
 		if (success) {
-  		printf("corrupted line is %d.\n", i);
-  		return acc;
+			printf("corrupted line is %d.\n", i);
+			return acc;
 		}
 		unmark_executed(instlist);
 	}
@@ -206,8 +206,8 @@ instructionlist_read(struct list_t * lst, char * filepath)
 {
 	FILE * fp = fopen(filepath, "r");
 	if (fp == NULL) {
-  	fprintf(stderr, "Error opening file `%s`.\n", filepath);
-  	exit(EXIT_FAILURE);
+		fprintf(stderr, "Error opening file `%s`.\n", filepath);
+		exit(EXIT_FAILURE);
 	}
 
 	char * line = NULL;
@@ -220,7 +220,7 @@ instructionlist_read(struct list_t * lst, char * filepath)
 	for (;;) {
 		nread = getline(&line, &len, fp);
 		if (nread == -1) {
-  		break;
+			break;
 		}
 		sscanf(line, "%3s %d", instruction, &value);
 		struct instr_t * ins = malloc(sizeof(struct instr_t));
@@ -235,10 +235,10 @@ instructionlist_read(struct list_t * lst, char * filepath)
 int
 main(int argc, char * argv[])
 {
-  if (argc != 2) {
-    fprintf(stderr, "Usage: %s FILE\n", argv[0]);
-    return EXIT_FAILURE;
-  }
+	if (argc != 2) {
+		fprintf(stderr, "Usage: %s FILE\n", argv[0]);
+		return EXIT_FAILURE;
+	}
 	char * filepath = argv[1];
 
 	struct list_t lst;
@@ -255,5 +255,5 @@ main(int argc, char * argv[])
 
 	list_free_list_and_items(&lst);
 
-  return EXIT_SUCCESS;
+	return EXIT_SUCCESS;
 }

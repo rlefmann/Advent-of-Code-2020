@@ -9,19 +9,19 @@
 #define COLORLIST_BUFSIZE 3
 
 struct rule_t {
-  char * bag_color_outer;
-  char * bag_color_inner;
-  int num;
+	char * bag_color_outer;
+	char * bag_color_inner;
+	int num;
 };
 
 
 void
 rule_init(struct rule_t * rule, char * bag_color_outer, char * bag_color_inner, int num)
 {
-  size_t l = strlen(bag_color_outer) + 1;
+	size_t l = strlen(bag_color_outer) + 1;
 	rule->bag_color_outer = malloc(l * sizeof(char));
 	strcpy(rule->bag_color_outer, bag_color_outer);
-  l = strlen(bag_color_inner) + 1;
+	l = strlen(bag_color_inner) + 1;
 	rule->bag_color_inner = malloc(l * sizeof(char));
 	strcpy(rule->bag_color_inner, bag_color_inner);
 	rule->num = num;
@@ -31,16 +31,16 @@ rule_init(struct rule_t * rule, char * bag_color_outer, char * bag_color_inner, 
 void
 rule_free(struct rule_t * rule)
 {
-  free(rule->bag_color_outer);
-  free(rule->bag_color_inner);
-  rule->num = 0;
+	free(rule->bag_color_outer);
+	free(rule->bag_color_inner);
+	rule->num = 0;
 }
 
 
 void
 rule_print(struct rule_t * rule)
 {
-  printf("`%s` \t %d `%s`\n", rule->bag_color_outer, rule->num, rule->bag_color_inner);
+	printf("`%s` \t %d `%s`\n", rule->bag_color_outer, rule->num, rule->bag_color_inner);
 }
 
 
@@ -54,9 +54,9 @@ struct list_t {
 void
 list_init(struct list_t * lst)
 {
-  lst->items = malloc(LIST_BUFSIZE * sizeof(void *));
-  lst->len = 0;
-  lst->cap = LIST_BUFSIZE;
+	lst->items = malloc(LIST_BUFSIZE * sizeof(void *));
+	lst->len = 0;
+	lst->cap = LIST_BUFSIZE;
 }
 
 
@@ -74,7 +74,7 @@ void
 list_free_list_and_items(struct list_t * lst)
 {
 	for (int i = 0; i < lst->len; i++) {
-  	free(lst->items[i]);
+		free(lst->items[i]);
 	}
 	list_free(lst);
 }
@@ -84,12 +84,12 @@ void
 list_add(struct list_t * lst, void * item)
 {
 	if (lst->len == lst->cap) {
-  	printf("resizing...\n");
-  	size_t cap_new = lst->cap + LIST_BUFSIZE;
+		printf("resizing...\n");
+		size_t cap_new = lst->cap + LIST_BUFSIZE;
 		lst->items = realloc(lst->items, cap_new * sizeof(void *));
 		if (lst->items == NULL) {
-  		fprintf(stderr, "Failed to allocate %d items.\n", cap_new);
-  		exit(EXIT_FAILURE);
+			fprintf(stderr, "Failed to allocate %d items.\n", cap_new);
+			exit(EXIT_FAILURE);
 		}
 		lst->cap = cap_new;
 	}
@@ -102,18 +102,18 @@ bool
 list_contains(struct list_t * lst, char * color)
 {
 	for (int i = 0; i < lst->len; i++) {
-  	if (strcmp(lst->items[i], color) == 0) {
-    	return true;
-  	}
+		if (strcmp(lst->items[i], color) == 0) {
+			return true;
+		}
 	}
 	return false;
 }
 
 
 struct rulelist_t {
-  size_t len;
-  size_t cap;
-  struct rule_t * items;
+	size_t len;
+	size_t cap;
+	struct rule_t * items;
 };
 
 
@@ -130,8 +130,8 @@ void
 rulelist_add(struct rulelist_t * lst, char * bag_color_outer, char * bag_color_inner, int num)
 {
 	if (lst->len == lst->cap) {
-  	printf("resizing...\n");
-  	size_t cap_new = lst->cap + RULELIST_BUFSIZE;
+		printf("resizing...\n");
+		size_t cap_new = lst->cap + RULELIST_BUFSIZE;
 		lst->items = realloc(lst->items, cap_new * sizeof(struct rule_t));
 		lst->cap = cap_new;
 	}
@@ -157,7 +157,7 @@ rulelist_print(struct rulelist_t * lst)
 {
 	printf("---\n");
 	for (int i = 0; i < lst->len; i++) {
-  	rule_print(&lst->items[i]);
+		rule_print(&lst->items[i]);
 	}
 	printf("---\n");
 }
@@ -174,7 +174,7 @@ split_before_after_first_occurence(char * str, char * substr)
 {
 	char * beginning_of_substr = strstr(str, substr);
 	if (beginning_of_substr == NULL) {
-  	return NULL;
+		return NULL;
 	}
 	beginning_of_substr[0] = '\0';
 	return beginning_of_substr + strlen(substr);
@@ -185,11 +185,11 @@ char *
 skip_whitespace_and_commas(char * str)
 {
 	for (;;) {
-  	if (isspace(str[0]) || str[0] == ',') {
-    	str++;
-  	} else {
-    	break;
-  	}
+		if (isspace(str[0]) || str[0] == ',') {
+			str++;
+		} else {
+			break;
+		}
 	}
 	return str;
 }
@@ -201,15 +201,15 @@ read_num(char * str, int * n)
 {
 	int nread = sscanf(str, "%d", n);
 	if (nread != 1) {
-  	fprintf(stderr, "Expected a number.\n");
-  	exit(EXIT_FAILURE);
+		fprintf(stderr, "Expected a number.\n");
+		exit(EXIT_FAILURE);
 	}
 	for (;;) {
-  	if (isdigit(str[0])) {
-    	str++;
-  	} else {
-    	break;
-  	}
+		if (isdigit(str[0])) {
+			str++;
+		} else {
+			break;
+		}
 	}
 	return str;
 }
@@ -221,10 +221,10 @@ char *
 find_outer_color(char * lineptr)
 {
 		char * substr = " bags contain ";
-  	char * after = split_before_after_first_occurence(lineptr, substr);
+		char * after = split_before_after_first_occurence(lineptr, substr);
 		if (after == NULL) {
-    	fprintf(stderr, "Error finding substr `%s` in `%s`.\n", substr, lineptr);
-    	exit(EXIT_FAILURE);
+			fprintf(stderr, "Error finding substr `%s` in `%s`.\n", substr, lineptr);
+			exit(EXIT_FAILURE);
 		}
 		return after;
 }
@@ -235,19 +235,19 @@ rulelist_fill(struct list_t * lst, char * filepath)
 {
 	FILE * fp = fopen(filepath, "r");
 	if (fp == NULL) {
-  	fprintf(stderr, "Error opening file `%s`.\n", filepath);
-  	exit(EXIT_FAILURE);
+		fprintf(stderr, "Error opening file `%s`.\n", filepath);
+		exit(EXIT_FAILURE);
 	}
 
 	char * line = NULL;
 	size_t len;
 	ssize_t nread;
 	for (;;) {
-  	nread = getline(&line, &len, fp);
-  	if (nread == -1) {
-    	break;
-  	}
-  	char * lineptr = line;
+		nread = getline(&line, &len, fp);
+		if (nread == -1) {
+			break;
+		}
+		char * lineptr = line;
 
 		char * after = find_outer_color(lineptr);
 		char * outer_color = lineptr;
@@ -256,26 +256,26 @@ rulelist_fill(struct list_t * lst, char * filepath)
 		char * inner_color = NULL;
 		int num;
 		for (;;) {
-  		lineptr = skip_whitespace_and_commas(lineptr);
-  		if (lineptr[0] == '.' || isalpha(lineptr[0])) {
-    		break;
-  		}
-  		printf("  %s", lineptr);
+			lineptr = skip_whitespace_and_commas(lineptr);
+			if (lineptr[0] == '.' || isalpha(lineptr[0])) {
+				break;
+			}
+			printf("	%s", lineptr);
 			lineptr =	read_num(lineptr, &num);
-  		lineptr = skip_whitespace_and_commas(lineptr);
-  		after = split_before_after_first_occurence(lineptr, " bag");
-  		if (after == NULL) {
-    		break;
-  		} else if (after[0] == 's') {
-    		after++;
-  		}
+			lineptr = skip_whitespace_and_commas(lineptr);
+			after = split_before_after_first_occurence(lineptr, " bag");
+			if (after == NULL) {
+				break;
+			} else if (after[0] == 's') {
+				after++;
+			}
 			inner_color = lineptr;
-    	lineptr = after;
+			lineptr = after;
 
 			struct rule_t * rule = malloc(sizeof(struct rule_t));
 			rule_init(rule, outer_color, inner_color, num);
 			list_add(lst, rule);
-    	//rulelist_add(lst, outer_color, inner_color);
+			//rulelist_add(lst, outer_color, inner_color);
 		}
 	}
 	free(line);
@@ -286,9 +286,9 @@ rulelist_fill(struct list_t * lst, char * filepath)
 int
 count_bags_that_can_contain_bag_of_color(struct list_t * rulelst, char * color)
 {
-  struct list_t colorlst;
-  list_init(&colorlst);
-  list_add(&colorlst, color);
+	struct list_t colorlst;
+	list_init(&colorlst);
+	list_add(&colorlst, color);
 	for (;;) {
 		size_t len_old = colorlst.len;
 
@@ -310,7 +310,7 @@ count_bags_that_can_contain_bag_of_color(struct list_t * rulelst, char * color)
 		}
 
 		if (colorlst.len == len_old) {
-  		break;
+			break;
 		}
 	}
 	size_t num_colors = colorlst.len;
@@ -322,10 +322,10 @@ count_bags_that_can_contain_bag_of_color(struct list_t * rulelst, char * color)
 int
 main(int argc, char * argv[])
 {
-  if (argc != 2) {
-    fprintf(stderr, "Usage: %s RULEFILE\n", argv[0]);
-    return EXIT_FAILURE;
-  }
+	if (argc != 2) {
+		fprintf(stderr, "Usage: %s RULEFILE\n", argv[0]);
+		return EXIT_FAILURE;
+	}
 
 	char * filepath = argv[1];
 
@@ -336,7 +336,7 @@ main(int argc, char * argv[])
 
 	printf("---\n");
 	for (int i = 0; i < lst.len; i++) {
-  	rule_print(lst.items[i]);
+		rule_print(lst.items[i]);
 	}
 	printf("---\n");
 
@@ -345,5 +345,5 @@ main(int argc, char * argv[])
 
 	list_free_list_and_items(&lst);
 
-  return EXIT_SUCCESS;
+	return EXIT_SUCCESS;
 }
