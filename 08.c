@@ -3,7 +3,6 @@
 #include <string.h>
 #include <stdbool.h>
 
-
 #define LIST_BUFSIZE 3
 
 struct instr_t {
@@ -100,53 +99,116 @@ list_add(struct list_t * lst, void * item)
 }
 
 
-int
-exec_program(struct list_t * instlist)
+void
+exec_instruction(struct instr_t * ins, int * acc, int * idx)
 {
-	int acc = 0;
+  if (strcmp(ins->instruction, "acc") == 0) {
+  	(*acc) += ins->value;
+  	(*idx)++;
+  } else if (strcmp(ins->instruction, "jmp") == 0) {
+  	(*idx) += ins->value;
+  } else if (strcmp(ins->instruction, "nop") == 0) {
+  	(*idx)++;
+  } else {
+  	fprintf(stderr, "Invalid instruction: `%s`.\n", ins->instruction);
+  	exit(EXIT_FAILURE);
+  }
+  ins->executed = true;
+}
+
+
+bool
+exec_program_pt1(struct list_t * instlist, int * acc)
+{
+	*acc = 0;
 	int instidx = 0;
 	struct instr_t * curinst;
 	for (;;) {
-  	if (instidx < 0 || instidx >= instlist->len) {
-    	break;
+  	if (instidx < 0 || instidx > instlist->len) {
+    	return false;
+  	} else if (instidx == instlist->len) {
+    	printf("program executed successfully!\n");
+    	return true;
   	}
 		curinst = instlist->items[instidx];
-		if (curinst->executed == true) {
-  		break;
-		} else if (strcmp(curinst->instruction, "acc") == 0) {
-  		acc += curinst->value;
-  		instidx++;
-		} else if (strcmp(curinst->instruction, "jmp") == 0) {
-  		instidx += curinst->value;
-		} else if (strcmp(curinst->instruction, "nop") == 0) {
-  		instidx++;
-		} else {
-			fprintf(stderr, "Invalid instruction: `%s`.\n", curinst->instruction);
-			exit(EXIT_FAILURE);
-		}
-		curinst->executed = true;
+	  if (curinst->executed == true) {
+  	  return false;
+	  }
+		exec_instruction(curinst, acc, &instidx);
 	}
-	return acc;
+	// never reached:
+	return false;
+}
+
+
+void
+unmark_executed(struct list_t * instlist)
+{
+  struct instr_t * ins;
+	for (int i = 0; i < instlist->len; i++) {
+		ins = instlist->items[i];
+		ins->executed = false;
+	}
+}
+
+
+bool
+change_instruction(struct instr_t * ins)
+{
+  if (strcmp(ins->instruction, "jmp") == 0) {
+	  strncpy(ins->instruction, "nop", 4);
+	  return true;
+  } else if (strcmp(ins->instruction, "nop") == 0) {
+	  strncpy(ins->instruction, "jmp", 4);
+	  return true;
+  }
+  return false;
+}
+
+
+bool
+exec_program_pt2(struct list_t * instlist, int * acc, int changedpos)
+{
+  struct instr_t * changeinstr = instlist->items[changedpos];
+  bool has_changed = change_instruction(changeinstr);
+  if (!has_changed) {
+    return false;
+  }
+
+	bool success = exec_program_pt1(instlist, acc);
+	change_instruction(changeinstr);
+	return success;
 }
 
 
 int
-main(int argc, char * argv[])
+fix_program(struct list_t * instlist)
 {
-  if (argc != 2) {
-    fprintf(stderr, "Usage: %s FILE\n", argv[0]);
-    return EXIT_FAILURE;
-  }
-	char * filepath = argv[1];
+	int acc;
+	bool success;
+	for (int i = 0; i < instlist->len; i++) {
+  	acc = 0;
+		success = exec_program_pt2(instlist, &acc, i);
+		if (success) {
+  		printf("corrupted line is %d.\n", i);
+  		return acc;
+		}
+		unmark_executed(instlist);
+	}
+	fprintf(stderr, "Program could not be fixed.\n");
+	exit(EXIT_FAILURE);
+}
 
+
+
+void
+instructionlist_read(struct list_t * lst, char * filepath)
+{
 	FILE * fp = fopen(filepath, "r");
 	if (fp == NULL) {
   	fprintf(stderr, "Error opening file `%s`.\n", filepath);
-  	return EXIT_FAILURE;
+  	exit(EXIT_FAILURE);
 	}
-
-	struct list_t lst;
-	list_init(&lst);
 
 	char * line = NULL;
 	size_t len;
@@ -163,15 +225,35 @@ main(int argc, char * argv[])
 		sscanf(line, "%3s %d", instruction, &value);
 		struct instr_t * ins = malloc(sizeof(struct instr_t));
 		instr_init(ins, instruction, value);
-		list_add(&lst, ins);
+		list_add(lst, ins);
 	}
 
-	int acc = exec_program(&lst);
-	printf("%d\n", acc);
+	fclose(fp);
+}
+
+
+int
+main(int argc, char * argv[])
+{
+  if (argc != 2) {
+    fprintf(stderr, "Usage: %s FILE\n", argv[0]);
+    return EXIT_FAILURE;
+  }
+	char * filepath = argv[1];
+
+	struct list_t lst;
+	list_init(&lst);
+	instructionlist_read(&lst, filepath);
+
+	int acc = 0;
+	exec_program_pt1(&lst, &acc);
+	printf("pt1: %d\n", acc);
+	unmark_executed(&lst);
+
+	acc = fix_program(&lst);
+	printf("pt2: %d\n", acc);
 
 	list_free_list_and_items(&lst);
-
-	fclose(fp);
 
   return EXIT_SUCCESS;
 }
