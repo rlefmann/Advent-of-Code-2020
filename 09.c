@@ -2,11 +2,13 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
+
 struct queue_t {
 	int * items;
 	size_t len;
 	size_t cap;
 };
+
 
 void
 queue_init(struct queue_t * q, size_t cap)
@@ -16,6 +18,7 @@ queue_init(struct queue_t * q, size_t cap)
 	q->cap = cap;
 }
 
+
 void
 queue_free(struct queue_t * q)
 {
@@ -23,6 +26,7 @@ queue_free(struct queue_t * q)
   q->len = 0;
   q->cap = 0;
 }
+
 
 void
 queue_add(struct queue_t * q, int item)
@@ -86,7 +90,8 @@ readxmas(char * filepath, size_t n)
 	for (;;) {
 		nread = getline(&line, &len, fp);
 		if (nread == -1) {
-  		break;
+  		fprintf(stderr, "Reached end of file.\n");
+  		exit(EXIT_FAILURE);
 		}
 
 		nread = sscanf(line, "%d\n", &value);
@@ -101,14 +106,15 @@ readxmas(char * filepath, size_t n)
   		if (is_sum_of_any_two(&previous_numbers, value)) {
     		queue_add(&previous_numbers, value);
   		} else {
-    		return value;
+    		break;
   		}
 		}
 		line_number++;
 	}
 	free(line);
 	fclose(fp);
-	return 0;
+	queue_free(&previous_numbers);
+	return value;
 }
 
 
