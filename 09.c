@@ -22,9 +22,9 @@ queue_init(struct queue_t * q, size_t cap)
 void
 queue_free(struct queue_t * q)
 {
-  free(q->items);
-  q->len = 0;
-  q->cap = 0;
+	free(q->items);
+	q->len = 0;
+	q->cap = 0;
 }
 
 
@@ -33,12 +33,12 @@ queue_add(struct queue_t * q, int item)
 {
 	if (q->len == q->cap) {
 		for (int i = 1; i < q->len; i++) {
-  		q->items[i-1] = q->items[i];
+			q->items[i-1] = q->items[i];
 		}
-  	q->items[q->len - 1] = item;
+		q->items[q->len - 1] = item;
 	} else {
-  	q->items[q->len] = item;
-  	q->len++;
+		q->items[q->len] = item;
+		q->len++;
 	}
 }
 
@@ -46,24 +46,24 @@ queue_add(struct queue_t * q, int item)
 void
 queue_print(struct queue_t * q)
 {
-  for (int i = 0; i < q->len; i++) {
-    printf("%d ", q->items[i]);
-  }
-  printf("\n");
+	for (int i = 0; i < q->len; i++) {
+		printf("%d ", q->items[i]);
+	}
+	printf("\n");
 }
 
 
 bool
 is_sum_of_any_two(struct queue_t * q, int val)
 {
-  int sum;
+	int sum;
 	for (int i = 0; i < q->len; i++) {
-  	for (int j = i + 1; j < q->len; j++) {
-    	sum = q->items[i] + q->items[j];
-    	if (sum == val) {
-      	return true;
-    	}
-  	}
+		for (int j = i + 1; j < q->len; j++) {
+			sum = q->items[i] + q->items[j];
+			if (sum == val) {
+				return true;
+			}
+		}
 	}
 	return false;
 }
@@ -77,8 +77,8 @@ readxmas(char * filepath, size_t n)
 
 	FILE * fp = fopen(filepath, "r");
 	if (fp == NULL) {
-  	fprintf(stderr, "Error opening file `%s`.\n", filepath);
-  	exit(EXIT_FAILURE);
+		fprintf(stderr, "Error opening file `%s`.\n", filepath);
+		exit(EXIT_FAILURE);
 	}
 
 	char * line;
@@ -90,24 +90,24 @@ readxmas(char * filepath, size_t n)
 	for (;;) {
 		nread = getline(&line, &len, fp);
 		if (nread == -1) {
-  		fprintf(stderr, "Reached end of file.\n");
-  		exit(EXIT_FAILURE);
+			fprintf(stderr, "Reached end of file.\n");
+			exit(EXIT_FAILURE);
 		}
 
 		nread = sscanf(line, "%d\n", &value);
 		if (nread != 1) {
-  		fprintf(stderr, "Error processing line `%s`.\n", line);
-  		exit(EXIT_FAILURE);
+			fprintf(stderr, "Error processing line `%s`.\n", line);
+			exit(EXIT_FAILURE);
 		}
 
 		if (line_number < n) {
-  		queue_add(&previous_numbers, value);
+			queue_add(&previous_numbers, value);
 		} else {
-  		if (is_sum_of_any_two(&previous_numbers, value)) {
-    		queue_add(&previous_numbers, value);
-  		} else {
-    		break;
-  		}
+			if (is_sum_of_any_two(&previous_numbers, value)) {
+				queue_add(&previous_numbers, value);
+			} else {
+				break;
+			}
 		}
 		line_number++;
 	}
@@ -121,10 +121,10 @@ readxmas(char * filepath, size_t n)
 int
 main(int argc, char * argv[])
 {
-  if (argc != 2) {
-    fprintf(stderr, "Usage: %s FILE\n", argv[0]);
-    return EXIT_FAILURE;
-  }
+	if (argc != 2) {
+		fprintf(stderr, "Usage: %s FILE\n", argv[0]);
+		return EXIT_FAILURE;
+	}
 
 	char * filepath = argv[1];
 	int res = readxmas(filepath, 25);
