@@ -15,13 +15,13 @@ void
 list_init(list_t * lst)
 {
 	size_t size = LIST_BUFSIZE * sizeof(int);
-  lst->items = malloc(size);
-  if (lst->items == NULL) {
-	  fprintf(stderr, "Failed to allocate %d bytes of memory.\n", size);
-	  exit(EXIT_FAILURE);
-  }
-  lst->len = 0;
-  lst->cap = LIST_BUFSIZE;
+	lst->items = malloc(size);
+	if (lst->items == NULL) {
+		fprintf(stderr, "Failed to allocate %d bytes of memory.\n", size);
+		exit(EXIT_FAILURE);
+	}
+	lst->len = 0;
+	lst->cap = LIST_BUFSIZE;
 }
 
 
@@ -39,11 +39,11 @@ void
 list_add(list_t * lst, int item)
 {
 	if (lst->len == lst->cap) {
-  	size_t cap_new = lst->cap + LIST_BUFSIZE;
+		size_t cap_new = lst->cap + LIST_BUFSIZE;
 		lst->items = realloc(lst->items, cap_new * sizeof(int));
 		if (lst->items == NULL) {
-  		fprintf(stderr, "Failed to allocate %d items.\n", cap_new);
-  		exit(EXIT_FAILURE);
+			fprintf(stderr, "Failed to allocate %d items.\n", cap_new);
+			exit(EXIT_FAILURE);
 		}
 		lst->cap = cap_new;
 	}
