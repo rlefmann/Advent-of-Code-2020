@@ -257,43 +257,13 @@ count_occupied_visible_seats(map_t * map, int vpos, int hpos)
 }
 
 
-/* Apply the following rules to the field at vertical position `vpos` and
- * horizontal position `hpos` of the map `map`:
- * 
- * - If a seat is empty and there are no occupied seats adjacent to it,
- *	 the seat becomes occupied.
- * - If a seat is occupied and four or more seats adjacent to it are
- *	 also occupied, the seat becomes empty.
- * 
- * Instead of directly applying the rules, they are applied to a copy
- * `map_cpy` of the input map.
- * The function returns `true` if the field has changed by applying
- * the rules. Otherwise the function returns `false`.
- */
-bool
-apply_rules_to_field_pt1(map_t * map, size_t vpos, size_t hpos, map_t * map_cpy)
-{
-	int num_seats = count_occupied_adjacent_seats(map, vpos, hpos);
-
-	fieldtype_e * field = &(map->items[vpos][hpos]);
-	fieldtype_e * fieldcpy = &(map_cpy->items[vpos][hpos]);
-
-	if (*field == SEAT_EMPTY && num_seats == 0) {
-		*fieldcpy = SEAT_OCCUPIED;
-		return true;
-	} else if (*field == SEAT_OCCUPIED && num_seats >= 4) {
-		*fieldcpy = SEAT_EMPTY;
-		return true;
-	}
-	return false;
-}
-
 typedef int (*count_func)(map_t * map, int vpos, int hpos);
 
 typedef struct {
 	count_func c;
 	int threshold;
 } rule_t;
+
 
 bool
 apply_rules_to_field(map_t * map, size_t vpos, size_t hpos, map_t * map_cpy, rule_t * rules)
