@@ -1,7 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <limits.h>
 
+#define THRESHOLD_PT1 4
+#define THRESHOLD_PT2 5
 
 typedef enum {
 	FLOOR, SEAT_EMPTY, SEAT_OCCUPIED
@@ -163,10 +166,14 @@ is_valid_field(map_t * map, size_t vpos, size_t hpos)
 bool
 is_seat_occupied(map_t * map, size_t vpos, size_t hpos)
 {
-	if (!is_valid_field(map, vpos, hpos)) {
-		return false;
-	}
 	return (map->items[vpos][hpos] == SEAT_OCCUPIED);
+}
+
+
+bool
+is_seat_empty(map_t * map, size_t vpos, size_t hpos)
+{
+	return (map->items[vpos][hpos] == SEAT_EMPTY);
 }
 
 
@@ -179,11 +186,73 @@ count_occupied_adjacent_seats(map_t * map, int vpos, int hpos)
 		for (int j = hpos - 1; j <= (hpos + 1); j++) {
 			if (i == vpos && j == hpos) {
 				continue;
+			} else if (!is_valid_field(map, i, j)) {
+				continue;
 			} else if (is_seat_occupied(map, i, j)) {
 				cnt++;
 			}
 		}
 	}
+	return cnt;
+}
+
+
+bool
+is_first_seat_occupied(map_t * map, int vpos, int hpos, int vdir, int hdir)
+{
+	int vstop;
+	if (vdir == 0) {
+		vstop = INT_MAX;
+	} else if (vdir == 1) {
+		vstop = map->height - vpos;
+	} else {
+		vstop = vpos + 1;
+	}
+
+	int hstop;
+	if (hdir == 0) {
+		hstop = INT_MAX;
+	} else if (hdir == 1) {
+		hstop = map->width - hpos;
+	} else {
+		hstop = hpos + 1;
+	}
+
+	int stop = vstop < hstop ? vstop : hstop;
+
+	int vpos_new;
+	int hpos_new;
+	for (int i = 1; i < stop; i++) {
+		vpos_new = vpos + vdir * i;
+		hpos_new = hpos + hdir * i;
+
+		if (is_seat_occupied(map, vpos_new, hpos_new)) {
+			return true;
+		} else if (is_seat_empty(map, vpos_new, hpos_new)) {
+			return false;
+		}
+	}
+	return false;
+}
+
+
+int
+count_occupied_visible_seats(map_t * map, int vpos, int hpos)
+{
+	int cnt = 0;
+
+	for (int vdir = -1; vdir <= 1; vdir++) {
+		for (int hdir = -1; hdir <= 1; hdir++) {
+
+			if (vdir == 0 && hdir == 0) {
+				continue;
+			} else if (is_first_seat_occupied(map, vpos, hpos, vdir, hdir)) {
+				cnt++;
+			}
+
+		}
+	}
+
 	return cnt;
 }
 
@@ -202,7 +271,7 @@ count_occupied_adjacent_seats(map_t * map, int vpos, int hpos)
  * the rules. Otherwise the function returns `false`.
  */
 bool
-apply_rules_to_field(map_t * map, size_t vpos, size_t hpos, map_t * map_cpy)
+apply_rules_to_field_pt1(map_t * map, size_t vpos, size_t hpos, map_t * map_cpy)
 {
 	int num_seats = count_occupied_adjacent_seats(map, vpos, hpos);
 
@@ -219,16 +288,41 @@ apply_rules_to_field(map_t * map, size_t vpos, size_t hpos, map_t * map_cpy)
 	return false;
 }
 
+typedef int (*count_func)(map_t * map, int vpos, int hpos);
+
+typedef struct {
+	count_func c;
+	int threshold;
+} rule_t;
 
 bool
-apply_rules_to_map(map_t * map, map_t * map_cpy)
+apply_rules_to_field(map_t * map, size_t vpos, size_t hpos, map_t * map_cpy, rule_t * rules)
+{
+	int num_seats = rules->c(map, vpos, hpos);
+
+	fieldtype_e * field = &(map->items[vpos][hpos]);
+	fieldtype_e * fieldcpy = &(map_cpy->items[vpos][hpos]);
+
+	if (*field == SEAT_EMPTY && num_seats == 0) {
+		*fieldcpy = SEAT_OCCUPIED;
+		return true;
+	} else if (*field == SEAT_OCCUPIED && num_seats >= rules->threshold) {
+		*fieldcpy = SEAT_EMPTY;
+		return true;
+	}
+	return false;
+}
+
+
+bool
+apply_rules_to_map(map_t * map, map_t * map_cpy, rule_t * rules)
 {
 	bool any_field_changed = false;
 	bool field_changed;
 
 	for (int i = 0; i < map->height; i++) {
 		for (int j = 0; j < map->width; j++) {
-			field_changed = apply_rules_to_field(map, i, j, map_cpy);
+			field_changed = apply_rules_to_field(map, i, j, map_cpy, rules);
 			if (field_changed) {
 				any_field_changed = true;
 			}
@@ -254,7 +348,7 @@ count_occupied_seats(map_t * map)
 
 
 void
-apply_rules_until_no_changes(map_t * map)
+simulate(map_t * map, rule_t * rules)
 {
 	map_t map_new;
 	map_init(&map_new, map->width, map->height);
@@ -262,7 +356,7 @@ apply_rules_until_no_changes(map_t * map)
 
 	bool any_field_changed;
 	for (;;) {
-		any_field_changed = apply_rules_to_map(map, &map_new);
+		any_field_changed = apply_rules_to_map(map, &map_new, rules);
 		if (!any_field_changed) {
 			break;
 		}
@@ -270,6 +364,17 @@ apply_rules_until_no_changes(map_t * map)
 	}
 
 	map_free(&map_new);
+}
+
+
+int
+load_map_and_simulate(map_t * map, char * filepath, rule_t * rules)
+{
+	map_init_from_file(map, filepath);
+	simulate(map, rules);
+	size_t cnt = count_occupied_seats(map);
+	map_free(map);
+	return cnt;
 }
 
 
@@ -283,14 +388,15 @@ main(int argc, char * argv[])
 	char * filepath = argv[1];
 
 	map_t map;
-	map_init_from_file(&map, filepath);
 
-	apply_rules_until_no_changes(&map);
+	rule_t rules_pt1 = { &count_occupied_adjacent_seats, THRESHOLD_PT1 };
+	rule_t rules_pt2 = { &count_occupied_visible_seats, THRESHOLD_PT2 };
 
-	size_t cnt = count_occupied_seats(&map);
+	size_t cnt = load_map_and_simulate(&map, filepath, &rules_pt1);
 	printf("%d\n", cnt);
 
-	map_free(&map);
+	cnt = load_map_and_simulate(&map, filepath, &rules_pt2);
+	printf("%d\n", cnt);
 
 	return EXIT_SUCCESS;
 }
