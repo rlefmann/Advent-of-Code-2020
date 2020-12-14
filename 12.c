@@ -1,5 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
+#include <math.h>
+
 
 typedef enum {
 	NORTH,
@@ -13,20 +16,30 @@ typedef struct {
 	int vpos;
 	int hpos;
 	direction_e dir;
+	// for pt. 2:
+	int vpos_waypoint;
+	int hpos_waypoint;
 } ship_t;
+
+
+void
+ship_print(ship_t * ship)
+{
+	printf("sv: %d sh: %d sd: %d wv: %d wh: %d\n", ship->vpos, ship->hpos, ship->dir, ship->vpos_waypoint, ship->hpos_waypoint);
+}
 
 
 void
 move_north(ship_t * ship, int value)
 {
-	ship->vpos = ship->vpos - value;
+	ship->vpos = ship->vpos + value;
 }
 
 
 void
 move_south(ship_t * ship, int value)
 {
-	ship->vpos = ship->vpos + value;
+	ship->vpos = ship->vpos - value;
 }
 
 
@@ -90,7 +103,90 @@ move_forward(ship_t * ship, int value)
 
 
 void
-follow_instruction(ship_t * ship, char instr, int value)
+move_waypoint_north(ship_t * ship, int value)
+{
+	ship->vpos_waypoint += value;
+}
+
+
+void
+move_waypoint_south(ship_t * ship, int value)
+{
+	ship->vpos_waypoint -= value;
+}
+
+
+void
+move_waypoint_west(ship_t * ship, int value)
+{
+	ship->hpos_waypoint -= value;
+}
+
+
+void
+move_waypoint_east(ship_t * ship, int value)
+{
+	ship->hpos_waypoint += value;
+}
+
+
+void
+move_toward_waypoint(ship_t * ship, int value)
+{
+	ship->vpos += value * ship->vpos_waypoint;
+	ship->hpos += value * ship->hpos_waypoint;
+}
+
+
+double
+deg2rad(double deg)
+{
+	return deg * M_PI / 180;
+}
+
+
+void
+rotate(double * vpos, double * hpos, double alpha, bool right)
+{
+	double alpha_rad = deg2rad(alpha);
+	double cs = cos(alpha_rad);
+	double sn = sin(alpha_rad);
+
+	double vc = *vpos * cs;
+	double vs = *vpos * sn;
+	double hc = *hpos * cs;
+	double hs = *hpos * sn;
+
+	double vpos_new = vc - hs;
+	double hpos_new = hc + vs;
+	if (right) {
+		*vpos = vc - hs;
+		*hpos = hc + vs;
+	} else {
+		*vpos = hs + vc;
+		*hpos = hc - vs; 
+	}
+
+}
+
+
+void
+rotate_waypoint(ship_t * ship, int value, bool right)
+{
+	if (value % 90 != 0) {
+		fprintf(stderr, "Turns must be a multiple of 90°.\n");
+		exit(EXIT_FAILURE);
+	}
+	double vpos = ship->vpos_waypoint;
+	double hpos = ship->hpos_waypoint;
+	rotate(&vpos, &hpos, value, right);
+	ship->vpos_waypoint = (int)vpos;
+	ship->hpos_waypoint = (int)hpos;
+}
+
+
+void
+follow_instruction_pt1(ship_t * ship, char instr, int value)
 {
 	if (instr == 'N') {
 		move_north(ship, value);
@@ -110,11 +206,40 @@ follow_instruction(ship_t * ship, char instr, int value)
 		fprintf(stderr, "Invalid instruction: `%c`.\n", instr);
 		exit(EXIT_FAILURE);
 	}
+	// ship_print(ship);
 }
 
 
 void
-navigate(ship_t * ship, char * filepath)
+follow_instruction_pt2(ship_t * ship, char instr, int value)
+{
+	if (instr == 'N') {
+		move_waypoint_north(ship, value);
+	} else if (instr == 'E') {
+		move_waypoint_east(ship, value);
+	} else if (instr == 'S') {
+		move_waypoint_south(ship, value);
+	} else if (instr == 'W') {
+		move_waypoint_west(ship, value);
+	} else if (instr == 'R') {
+		rotate_waypoint(ship, value, true);
+	} else if (instr == 'L') {
+		rotate_waypoint(ship, value, false);
+	} else if (instr == 'F') {
+		move_toward_waypoint(ship, value);
+	} else {
+		fprintf(stderr, "Invalid instruction: `%c`.\n", instr);
+		exit(EXIT_FAILURE);
+	}
+	// ship_print(ship);
+}
+
+
+typedef void (*nav_func)(ship_t * ship, char instr, int value);
+
+
+void
+navigate(ship_t * ship, char * filepath, nav_func follow_instruction)
 {
 	FILE * fp = fopen(filepath, "r");
 	if (fp == NULL) {
@@ -147,6 +272,13 @@ navigate(ship_t * ship, char * filepath)
 
 
 int
+manhattan(ship_t * ship)
+{
+	return abs(ship->vpos) + abs(ship->hpos);
+}
+
+
+int
 main(int argc, char * argv[])
 {
 	if (argc != 2) {
@@ -154,11 +286,14 @@ main(int argc, char * argv[])
 		return EXIT_FAILURE;
 	}
 	char * filepath = argv[1];
+	
+	ship_t ship_pt1 = { 0, 0, EAST, 0, 0 };
+	navigate(&ship_pt1, filepath, &follow_instruction_pt1);
+	printf("pt1: %d\n", manhattan(&ship_pt1));
+	
+	ship_t ship_pt2 = { 0, 0, EAST, 1, 10 };
+	navigate(&ship_pt2, filepath, &follow_instruction_pt2);
+	printf("pt2: %d\n", manhattan(&ship_pt2));
 
-	ship_t ship = { 0, 0, EAST };
-
-	navigate(&ship, filepath);
-
-	printf("%d\n", ship.vpos + ship.hpos);
 	return EXIT_SUCCESS;
 }
