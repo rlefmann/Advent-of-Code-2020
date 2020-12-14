@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <math.h>
-
+#include <limits.h>  // REMOVE
 
 typedef enum {
 	NORTH,
@@ -20,13 +20,6 @@ typedef struct {
 	int vpos_waypoint;
 	int hpos_waypoint;
 } ship_t;
-
-
-void
-ship_print(ship_t * ship)
-{
-	printf("sv: %d sh: %d sd: %d wv: %d wh: %d\n", ship->vpos, ship->hpos, ship->dir, ship->vpos_waypoint, ship->hpos_waypoint);
-}
 
 
 void
@@ -157,8 +150,6 @@ rotate(double * vpos, double * hpos, double alpha, bool right)
 	double hc = *hpos * cs;
 	double hs = *hpos * sn;
 
-	double vpos_new = vc - hs;
-	double hpos_new = hc + vs;
 	if (right) {
 		*vpos = vc - hs;
 		*hpos = hc + vs;
@@ -180,8 +171,11 @@ rotate_waypoint(ship_t * ship, int value, bool right)
 	double vpos = ship->vpos_waypoint;
 	double hpos = ship->hpos_waypoint;
 	rotate(&vpos, &hpos, value, right);
-	ship->vpos_waypoint = (int)vpos;
-	ship->hpos_waypoint = (int)hpos;
+
+	// round to avoid numerical problems
+	// we could also add a small number like 0.001, instead
+	ship->vpos_waypoint = (int)round(vpos);
+	ship->hpos_waypoint = (int)round(hpos);
 }
 
 
@@ -206,7 +200,6 @@ follow_instruction_pt1(ship_t * ship, char instr, int value)
 		fprintf(stderr, "Invalid instruction: `%c`.\n", instr);
 		exit(EXIT_FAILURE);
 	}
-	// ship_print(ship);
 }
 
 
@@ -231,7 +224,6 @@ follow_instruction_pt2(ship_t * ship, char instr, int value)
 		fprintf(stderr, "Invalid instruction: `%c`.\n", instr);
 		exit(EXIT_FAILURE);
 	}
-	// ship_print(ship);
 }
 
 
