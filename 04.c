@@ -1,3 +1,5 @@
+#define  _POSIX_C_SOURCE 200809L
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -13,6 +15,8 @@
 
 #define NUM_FIELDS 8
 #define END_OF_FIELDS -1
+
+
 enum { byr, iyr, eyr, hgt, hcl, ecl, pid, cid };
 
 

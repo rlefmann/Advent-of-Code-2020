@@ -1,3 +1,5 @@
+#define  _POSIX_C_SOURCE 200809L
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -89,6 +91,7 @@ map_print(struct map_t * map)
 	}
 }
 
+
 int
 map_getfield(struct map_t * map, int vpos, int hpos)
 {
@@ -99,6 +102,7 @@ map_getfield(struct map_t * map, int vpos, int hpos)
 	hpos = hpos % map->width;
 	return map->data[vpos][hpos];
 }
+
 
 int
 count_trees_encountered(struct map_t * map, int vslope, int hslope)
