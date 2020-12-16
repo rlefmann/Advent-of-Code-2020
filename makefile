@@ -14,8 +14,10 @@ all: $(executables)
 02: 02.o
 02.o: 02.c
 
-03: 03.o
-03.o: 03.c
+03-sources = 03.c lib/alloc.c lib/util.c
+03-objects = $(03-sources:.c=.o)
+03: $(03-objects)
+03.o: 03.c lib/matrixint.h lib/matrix.h lib/alloc.h
 
 04: 04.o
 04.o: 04.c
