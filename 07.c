@@ -1,12 +1,19 @@
+#define  _POSIX_C_SOURCE 200809L
+
+#define TYPE struct rule_t *
+#define NAME rule
+#include "lib/list.h"
+#undef TYPE
+#undef NAME
+
+#include "lib/liststring.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
 #include <stdbool.h>
 
-#define LIST_BUFSIZE 3
-#define RULELIST_BUFSIZE 3
-#define COLORLIST_BUFSIZE 3
 
 struct rule_t {
 	char * bag_color_outer;
@@ -44,62 +51,8 @@ rule_print(struct rule_t * rule)
 }
 
 
-struct list_t {
-	size_t len;
-	size_t cap;
-	void ** items;
-};
-
-
-void
-list_init(struct list_t * lst)
-{
-	lst->items = malloc(LIST_BUFSIZE * sizeof(void *));
-	lst->len = 0;
-	lst->cap = LIST_BUFSIZE;
-}
-
-
-// this does not free the items!
-void
-list_free(struct list_t * lst)
-{
-	free(lst->items);
-	lst->len = 0;
-	lst->cap = 0;
-}
-
-
-void
-list_free_list_and_items(struct list_t * lst)
-{
-	for (int i = 0; i < lst->len; i++) {
-		free(lst->items[i]);
-	}
-	list_free(lst);
-}
-
-
-void
-list_add(struct list_t * lst, void * item)
-{
-	if (lst->len == lst->cap) {
-		printf("resizing...\n");
-		size_t cap_new = lst->cap + LIST_BUFSIZE;
-		lst->items = realloc(lst->items, cap_new * sizeof(void *));
-		if (lst->items == NULL) {
-			fprintf(stderr, "Failed to allocate %d items.\n", cap_new);
-			exit(EXIT_FAILURE);
-		}
-		lst->cap = cap_new;
-	}
-	lst->items[lst->len] = item;
-	lst->len++;
-}
-
-
 bool
-list_contains(struct list_t * lst, char * color)
+stringlist_contains(stringlist_t * lst, char * color)
 {
 	for (int i = 0; i < lst->len; i++) {
 		if (strcmp(lst->items[i], color) == 0) {
@@ -110,54 +63,12 @@ list_contains(struct list_t * lst, char * color)
 }
 
 
-struct rulelist_t {
-	size_t len;
-	size_t cap;
-	struct rule_t * items;
-};
-
-
 void
-rulelist_init(struct rulelist_t * lst)
-{
-	lst->items = malloc(RULELIST_BUFSIZE * sizeof(struct rule_t));
-	lst->len = 0;
-	lst->cap = RULELIST_BUFSIZE;
-}
-
-
-void
-rulelist_add(struct rulelist_t * lst, char * bag_color_outer, char * bag_color_inner, int num)
-{
-	if (lst->len == lst->cap) {
-		printf("resizing...\n");
-		size_t cap_new = lst->cap + RULELIST_BUFSIZE;
-		lst->items = realloc(lst->items, cap_new * sizeof(struct rule_t));
-		lst->cap = cap_new;
-	}
-	rule_init(&lst->items[lst->len], bag_color_outer, bag_color_inner, num);
-	lst->len++;
-}
-
-
-void
-rulelist_free(struct rulelist_t * lst)
-{
-	for (int i = 0; i < lst->len; i++) {
-		rule_free(&lst->items[i]);
-	}
-	free(lst->items);
-	lst->len = 0;
-	lst->cap = 0;
-}
-
-
-void
-rulelist_print(struct rulelist_t * lst)
+rulelist_print(rulelist_t * lst)
 {
 	printf("---\n");
 	for (int i = 0; i < lst->len; i++) {
-		rule_print(&lst->items[i]);
+		rule_print(lst->items[i]);
 	}
 	printf("---\n");
 }
@@ -166,7 +77,7 @@ rulelist_print(struct rulelist_t * lst)
 // insert a null terminator at the beginning position of the substring substr
 // This function returns a pointer to the remaining part of the input string
 // which follows after the first occurence of the substring.
-// THe function returns NULL, if the substring is not found.
+// The function returns NULL, if the substring is not found.
 // After execution, the input pointer str contains the part of the string
 // before the first occurence of substr.
 char *
@@ -231,7 +142,7 @@ find_outer_color(char * lineptr)
 
 
 void
-rulelist_fill(struct list_t * lst, char * filepath)
+rulelist_fill(rulelist_t * lst, char * filepath)
 {
 	FILE * fp = fopen(filepath, "r");
 	if (fp == NULL) {
@@ -274,8 +185,7 @@ rulelist_fill(struct list_t * lst, char * filepath)
 
 			struct rule_t * rule = malloc(sizeof(struct rule_t));
 			rule_init(rule, outer_color, inner_color, num);
-			list_add(lst, rule);
-			//rulelist_add(lst, outer_color, inner_color);
+			rulelist_add(lst, rule);
 		}
 	}
 	free(line);
@@ -284,11 +194,11 @@ rulelist_fill(struct list_t * lst, char * filepath)
 
 
 int
-count_bags_that_can_contain_bag_of_color(struct list_t * rulelst, char * color)
+count_bags_that_can_contain_bag_of_color(rulelist_t * rulelst, char * color)
 {
-	struct list_t colorlst;
-	list_init(&colorlst);
-	list_add(&colorlst, color);
+	stringlist_t colorlst;
+	stringlist_init(&colorlst);
+	stringlist_add(&colorlst, color);
 	for (;;) {
 		size_t len_old = colorlst.len;
 
@@ -301,8 +211,8 @@ count_bags_that_can_contain_bag_of_color(struct list_t * rulelst, char * color)
 				if (strcmp(currule->bag_color_inner, curcolor) == 0) {
 						printf("%s matches\n", curcolor);
 						char * outer_color = currule->bag_color_outer;
-						if (!list_contains(&colorlst, outer_color)) {
-							list_add(&colorlst, outer_color);
+						if (!stringlist_contains(&colorlst, outer_color)) {
+							stringlist_add(&colorlst, outer_color);
 							printf("Added %s!\n", outer_color);
 						}
 				}
@@ -314,7 +224,7 @@ count_bags_that_can_contain_bag_of_color(struct list_t * rulelst, char * color)
 		}
 	}
 	size_t num_colors = colorlst.len;
-	list_free(&colorlst);
+	stringlist_free(&colorlst);
 	return num_colors - 1;
 }
 
@@ -329,8 +239,8 @@ main(int argc, char * argv[])
 
 	char * filepath = argv[1];
 
-	struct list_t lst;
-	list_init(&lst);
+	rulelist_t lst;
+	rulelist_init(&lst);
 
 	rulelist_fill(&lst, filepath);
 
@@ -343,7 +253,10 @@ main(int argc, char * argv[])
 	int cnt = count_bags_that_can_contain_bag_of_color(&lst, "shiny gold");
 	printf("%d\n", cnt);
 
-	list_free_list_and_items(&lst);
+	for (int i = 0; i < lst.len; i++) {
+  	free(lst.items[i]);
+	}
+	rulelist_free(&lst);
 
 	return EXIT_SUCCESS;
 }
