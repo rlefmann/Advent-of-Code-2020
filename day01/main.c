@@ -1,6 +1,8 @@
 #define  _POSIX_C_SOURCE 200809L
 
-#include "lib/listint.h"
+#include "../lib/listint.h"
+#include "../lib/util.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/types.h>
@@ -11,8 +13,7 @@ intlist_readfile(intlist_t * list, char * filepath)
 {
 	FILE * fp = fopen(filepath, "r");
 	if (fp == NULL) {
-		fprintf(stderr, "Error opening file `%s`.\n", filepath);
-		exit(EXIT_FAILURE);
+		die("Error opening file `%s`.\n", filepath);
 	}
 
 	char * line = NULL;
@@ -61,13 +62,14 @@ int
 main(int argc, char * argv[])
 {
 	if (argc != 2) {
-		fprintf(stderr, "Usage %s FILEPATH\n", argv[0]);
-		return EXIT_FAILURE;
+		die("Usage %s FILEPATH\n", argv[0]);
 	}
 	char * filepath = argv[1];
+
 	intlist_t list;
 	intlist_init(&list);
 	intlist_readfile(&list, filepath);
+
 	printf("%d\n", multiply_2_numbers_that_add_to_2020(&list));
 	printf("%d\n", multiply_3_numbers_that_add_to_2020(&list));
 
