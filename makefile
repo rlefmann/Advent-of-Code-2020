@@ -1,13 +1,10 @@
 .POSIX:
 
-executables = 02 03 04 05 06 07
+executables = 03 04 05 06 07
 
-objects = 02.o 03.o 04.o 05.o 06.o 07.o /lib/alloc.o lib/util.o
+objects = 03.o 04.o 05.o 06.o 07.o /lib/alloc.o lib/util.o
 
 all: $(executables)
-
-02: 02.o
-02.o: 02.c
 
 03-sources = 03.c lib/alloc.c lib/util.c
 03-objects = $(03-sources:.c=.o)
