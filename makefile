@@ -2,7 +2,7 @@
 
 executables = 01 02 03 04 05 06 07
 
-objects = 01.o 02.o 03.o 04.o 05.o 06.o 07.o lib/alloc.o lib/util.o
+objects = 01.o 02.o 03.o 04.o 05.o 06.o 07.o /lib/alloc.o lib/util.o
 
 all: $(executables)
 
@@ -32,7 +32,6 @@ all: $(executables)
 07-objects = $(07-sources:.c=.o)
 07: $(07-objects)
 07.o: 07.c lib/list.h lib/alloc.h lib/liststring.h lib/list.h
-
 
 lib/alloc.o: lib/alloc.c lib/alloc.h
 lib/util.o: lib/util.c lib/util.h
