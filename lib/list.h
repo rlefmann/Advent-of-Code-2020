@@ -1,5 +1,11 @@
-#include "alloc.h"
+#if ! defined(TYPE)
+#error No type specified.
+#elif ! defined(NAME)
+#error No name specified.
+#endif
 
+
+#include "alloc.h"
 #include <stdlib.h>
 
 #ifndef LIST_BUFSIZE
@@ -53,3 +59,10 @@ LIST_ADD(NAME)(LIST(NAME) * list, TYPE item)
 	list->items[list->len] = item;
 	list->len++;
 }
+
+#undef LIST
+#undef LIST_INIT
+#undef LIST_FREE
+#undef LIST_ADD
+#undef TYPE
+#undef NAME
